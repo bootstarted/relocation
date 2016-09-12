@@ -13,12 +13,9 @@ export const componentShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
   props: PropTypes.object,
-  hide: PropTypes.func,
+  remove: PropTypes.func,
+  removePath: PropTypes.string,
   render: renderShape,
 });
 
 export const componentsShape = PropTypes.arrayOf(componentShape);
-
-export const contextShape = PropTypes.shape({
-  components: componentsShape.isRequired,
-});

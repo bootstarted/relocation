@@ -1,102 +1,123 @@
-import {Component, createElement, PropTypes} from 'react';
-import {formatPattern, routerShape} from 'react-router';
-import hoistStatics from 'hoist-non-react-statics';
+import {Component, PropTypes, Children} from 'react';
+import {connect} from 'react-redux';
+import invariant from 'fbjs/lib/invariant';
 
-import RelocationProvider from './provider';
+import {setRouteComponents, setPreviousPath} from './action';
 
-const getDisplayName = (C) => C.displayName || C.name || 'Component';
+/**
+ * [description]
+ * @param {Function} formatPattern - The React Router `formatPattern` function.
+ * @returns {[type]}              [description]
+ */
+export default (formatPattern) => {
+  invariant(
+    typeof formatPattern === 'function',
+   'The `formatPattern` function from `react-redux` must be provided. ' +
+   'Add `import {formatPattern} from "react-router"` and add it as the ' +
+   'argument to your call to `createRelocationRouter`.'
+  );
 
-export const createRouterComponent = (WrappedComponent) => {
-  class Connect extends Component {
+  const finalFormatPattern = typeof formatPattern === 'function' ?
+    formatPattern : (path) => path;
+
+  class RelocationRouter extends Component {
     static propTypes = {
       routes: PropTypes.array.isRequired,
       params: PropTypes.object.isRequired,
+      location: PropTypes.object.isRequired,
+      children: PropTypes.element.isRequired,
+      dispatch: PropTypes.func.isRequired,
     };
 
-    static contextTypes = {
-      router: routerShape,
-    };
-
-    constructor(state, props) {
-      super(state, props);
-      this.state = {previousLocation: {}};
+    // Use `componentWillMount` over `constructor` when calling `dispatch`.
+    // see: https://github.com/reactjs/react-redux/issues/129
+    componentWillMount() {
+      this.updateRouteComponents(this.props);
     }
 
-    componentWillReceiveProps() {
-      this.setState({previousLocation: this.props.location});
+    componentWillReceiveProps(nextProps) {
+      this.updatePreviousPath(nextProps);
+      this.updateRouteComponents(nextProps);
     }
 
-    render() {
-      const {routes, params} = this.props;
-      const {router} = this.context;
+    updateRouteComponents(props) {
+      const {routes, params} = props;
+      const {dispatch} = this.props;
 
-      // Create a function that will remove the component by navigating to a
-      // different path. Call `router.replace` with `item.hide` if it is
-      // defined, otherwise call router.replace with the formatted path of the
-      // parent route.
+      if (this.routes === params && this.prams === params) {
+        return;
+      }
 
-      const createRemove = (i) => {
-        let path = routes[i].relocation.remove;
+      this.routes = routes;
+      this.params = params;
 
-        if (!path) {
-          let parentPath;
+      const join = (base, path) => {
+        return base + (path && !/\/$/.test(base) ? '/' : '') + path;
+      };
 
-          for (let current = i - 1; !parentPath && i >= 0; current--) {
-            const parent = routes[current];
-            parentPath = parent && parent.path;
-          }
+      const getFormattedPathName = (i) => {
+        let path = '';
 
-          if (parentPath) {
-            path = formatPattern(parentPath, params);
+        for (let current = i; current >= 0; current--) {
+          const route = routes[current];
+
+          if (route && route.path) {
+            path = join(route.path, path);
+            if (/^\//.test(path)) {
+              return finalFormatPattern(path, params);
+            }
           }
         }
 
-        if (!path) {
-          return null;
-        }
-
-        return () => {
-          if (path === this.state.previousLocation.pathname) {
-            router.goBack();
-          } else {
-            router.push(path);
-          }
-        };
+        return null;
       };
 
       const components = routes.reduce((components, route, i) => {
-        const {relocation, path} = route;
+        const {relocation} = route;
 
         if (relocation) {
           components.push({
             // Use the formatted path that matched as the default id.
-            id: formatPattern(path, params),
+            id: getFormattedPathName(i),
 
             // Merge component props with redux-router props.
-            props: {...this.props, ...relocation.props},
+            props: {
+              ...this.props,
+              location: props.location,
+              params: props.params,
+            },
 
             // If `route.relocation` is a string, assign it the type. Otherwise
             // merge its values.
             ...typeof relocation === 'string' ? {type: relocation} : relocation,
 
-            // Assign a remove function. Use `route.relocation.remove`
-            // if it's a function.
-            remove: typeof relocation.remove === 'function' ?
-              relocation.remove :
-              createRemove(i),
+            removePath: relocation.removePath !== undefined ?
+              relocation.removePath :
+              getFormattedPathName(i - 1),
           });
         }
 
         return components;
       }, []);
 
-      return createElement(WrappedComponent, {components, ...this.props});
+      dispatch(setRouteComponents(components));
+    }
+
+    updatePreviousPath(nextProps) {
+      const {location: {pathname: previousPath}, dispatch} = this.props;
+      const {location: {pathname: currentPath}} = nextProps;
+
+      if (previousPath && previousPath !== currentPath) {
+        dispatch(setPreviousPath(previousPath));
+      }
+    }
+
+    render() {
+      const {children} = this.props;
+
+      return Children.only(children);
     }
   }
 
-  Connect.displayName = `RelocationRouter(${getDisplayName(WrappedComponent)})`;
-
-  return hoistStatics(Connect, WrappedComponent);
+  return connect()(RelocationRouter);
 };
-
-export default createRouterComponent(RelocationProvider);
