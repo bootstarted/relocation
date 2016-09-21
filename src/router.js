@@ -12,9 +12,9 @@ import {setRouteComponents, setPreviousPath} from './action';
 export default (formatPattern) => {
   invariant(
     typeof formatPattern === 'function',
-   'The `formatPattern` function from `react-redux` must be provided. ' +
-   'Add `import {formatPattern} from "react-router"` and add it as the ' +
-   'argument to your call to `createRelocationRouter`.'
+    'The `formatPattern` function from `react-redux` must be provided. ' +
+    'Add `import {formatPattern} from "react-router"` and add it as the ' +
+    'argument to your call to `createRelocationRouter`.'
   );
 
   const finalFormatPattern = typeof formatPattern === 'function' ?
@@ -41,7 +41,7 @@ export default (formatPattern) => {
     }
 
     updateRouteComponents(props) {
-      const {routes, params} = props;
+      const {routes, params, location} = props;
       const {dispatch} = this.props;
 
       if (this.routes === params && this.prams === params) {
@@ -82,9 +82,9 @@ export default (formatPattern) => {
 
             // Merge component props with redux-router props.
             props: {
-              ...this.props,
-              location: props.location,
-              params: props.params,
+              ...relocation.props,
+              location,
+              params,
             },
 
             // If `route.relocation` is a string, assign it the type. Otherwise
