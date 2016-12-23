@@ -2,7 +2,7 @@ import {Component, PropTypes, Children} from 'react';
 import {connect} from 'react-redux';
 import invariant from 'fbjs/lib/invariant';
 
-import {setRouteComponents, setPreviousPath} from './action';
+import {setRouteComponents} from './action';
 
 /**
  * [description]
@@ -36,7 +36,6 @@ export default (formatPattern) => {
     }
 
     componentWillReceiveProps(nextProps) {
-      this.updatePreviousPath(nextProps);
       this.updateRouteComponents(nextProps);
     }
 
@@ -101,15 +100,6 @@ export default (formatPattern) => {
       }, []);
 
       dispatch(setRouteComponents(components));
-    }
-
-    updatePreviousPath(nextProps) {
-      const {location: {pathname: previousPath}, dispatch} = this.props;
-      const {location: {pathname: currentPath}} = nextProps;
-
-      if (previousPath && previousPath !== currentPath) {
-        dispatch(setPreviousPath(previousPath));
-      }
     }
 
     render() {

@@ -2,7 +2,7 @@ import {Component, createElement, PropTypes} from 'react';
 import hoistStatics from 'hoist-non-react-statics';
 import {connect} from 'react-redux';
 
-import {getMergedComponents, getPreviousPath} from './selector';
+import {getMergedComponents} from './selector';
 import {removeComponent} from './action';
 import {componentsShape, renderMapShape, getDisplayName} from './util';
 
@@ -22,7 +22,6 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
       dispatch: PropTypes.func.isRequired,
       ___relocation___: PropTypes.shape({
         components: componentsShape.isRequired,
-        previousPath: PropTypes.string.isRequired,
         config: PropTypes.object.isRequired,
         renderMap: renderMapShape.isRequired,
       }).isRequired,
@@ -32,29 +31,16 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
       router: PropTypes.object,
     }
 
-    navigateToPath(path, {useHistoryBack = true} = {}) {
+    navigateToPath(path) {
       // Check for the react-router context.
       if (!this.context.router) {
         return;
       }
 
-      const {previousPath} = this.props.___relocation___;
-
-      // The `useHistoryBack` option will trigger the use of the `goBack` method
-      // instead of `push` in an effort to keep the if the requested path is
-      // equal to the previous path.
-      //
-      // This is useful in scenraios where component that is displayed in
-      // response to a route change is considered dismissed or completed on
-      // removal.
-      if (useHistoryBack && path === previousPath) {
-        this.context.router.goBack();
-      } else {
-        this.context.router.push(path);
-      }
+      this.context.router.push(path);
     }
 
-    removeComponent(id/* , options */) {
+    removeComponent(id) {
       return this.props.dispatch(removeComponent(id));
     }
 
@@ -80,8 +66,7 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
           // The component object does not have a `remove` property, or it has
           // a truthy value that is not a function. Either case indicates that
           // it should use the default remove handler.
-          removeHandler = (options) =>
-            this.removeComponent(component.id, options);
+          removeHandler = () => this.removeComponent(component.id);
         }
 
         let pathRemoveHandler = null;
@@ -89,17 +74,16 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
         if (typeof component.removePath === 'string') {
           // Create a function that will change the history state when removing
           // the component.
-          pathRemoveHandler = (options) =>
-            this.navigateToPath(component.removePath, options);
+          pathRemoveHandler = () => this.navigateToPath(component.removePath);
         }
 
         if (pathRemoveHandler && removeHandler) {
           // A remove handler function and a
           return {
             ...component,
-            remove: (options) => {
-              pathRemoveHandler(options);
-              return removeHandler(options);
+            remove: () => {
+              pathRemoveHandler();
+              return removeHandler();
             },
           };
         }
@@ -158,7 +142,6 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
       // conflict with existing props.
       ___relocation___: {
         components: getMergedComponents(state, selectorProps),
-        previousPath: getPreviousPath(state, selectorProps),
         config,
         renderMap,
       },

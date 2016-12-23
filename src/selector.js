@@ -11,9 +11,6 @@ export const getComponents = (state, props) =>
 export const getRouteComponents = (state, props) =>
   getRelocation(state, props).routeComponents;
 
-export const getPreviousPath = (state, props) =>
-  getRelocation(state, props).previousPath;
-
 export const getMergedComponents = (state, props) =>
   [...getRouteComponents(state, props), ...getComponents(state, props)].
     reduce((components, component) => {
