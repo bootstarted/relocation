@@ -1,4 +1,4 @@
-import {Component, PropTypes, Children} from 'react';
+import {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import invariant from 'fbjs/lib/invariant';
 
@@ -103,9 +103,7 @@ export default (formatPattern) => {
     }
 
     render() {
-      const {children} = this.props;
-
-      return Children.only(children);
+      return this.props.children;
     }
   }
 
