@@ -2,8 +2,8 @@ import {Component, createElement, PropTypes} from 'react';
 import hoistStatics from 'hoist-non-react-statics';
 import {connect} from 'react-redux';
 
-import {getMergedComponents} from './selector';
-import {removeComponent} from './action';
+import {getComponents} from './selector';
+import {removeComponent, updateComponent} from './action';
 import {componentsShape, renderMapShape, getDisplayName} from './util';
 
 /**
@@ -43,80 +43,36 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
 
     render() {
       const {components, renderMap} = this.props.___relocationState___;
-      const {removeComponent} = this.props.___relocationDispatch___;
+      const {
+        removeComponent,
+        updateComponent,
+      } = this.props.___relocationDispatch___;
 
       const inRenderMap = (component) =>
         typeof renderMap[component.type] === 'function';
 
-      const assignRender = (component) => ({
-        ...component,
-        render: renderMap[component.type],
-      });
+      const assign = (component) => {
+        const result = {
+          ...component,
+          render: renderMap[component.type],
+          update: (props) => updateComponent(component.id, props),
+          remove: typeof component.removePath === 'string'
+            ? () => this.navigateToPath(component.removePath)
+            : () => removeComponent(component.id),
+        };
 
-      const assignScope = (component) => ({...component, scope});
-
-      const assignRemoveHandler = (component) => {
-        let removeHandler = null;
-
-        if (typeof component.remove === 'function') {
-          // The component object remove property is already a function.
-          // We don't want to override this behavior.
-          removeHandler = component.remove;
-        } else if (component.remove === undefined || component.remove) {
-          // The component object does not have a `remove` property, or it has
-          // a truthy value that is not a function. Either case indicates that
-          // it should use the default remove handler.
-          removeHandler = () => removeComponent(component.id);
+        if (scope) {
+          result.scope = scope;
         }
 
-        let pathRemoveHandler = null;
-
-        if (typeof component.removePath === 'string') {
-          // Create a function that will change the history state when removing
-          // the component.
-          pathRemoveHandler = () => this.navigateToPath(component.removePath);
-        }
-
-        if (pathRemoveHandler && removeHandler) {
-          // A remove handler function and a
-          return {
-            ...component,
-            remove: () => {
-              pathRemoveHandler();
-              return removeHandler();
-            },
-          };
-        }
-
-        if (pathRemoveHandler && !removeHandler) {
-          return {
-            ...component,
-            remove: pathRemoveHandler,
-          };
-        }
-
-        if (!pathRemoveHandler && removeHandler !== component.remove) {
-          return {
-            ...component,
-            remove: removeHandler,
-          };
-        }
-
-        // `!pathRemoveHandler && removeHandler === component.remove` is true.
-        // This means `remove` was set and `removePath` was not set on the
-        // component object. No modification is necessary.
-        return component;
+        return result;
       };
 
       const currentComponents = components
         // Remove components not included in the render function map.
         .filter(inRenderMap)
-        // Assign render functions.
-        .map(assignRender)
-        // Assign scope, if configured.
-        .map(scope ? assignScope : (component) => component)
-        // Assign remove handler functions.
-        .map(assignRemoveHandler);
+        // Assign render update and remove functions and scope if it is defined.
+        .map(assign);
 
       /* eslint-disable no-unused-vars */
       const {
@@ -155,7 +111,7 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
       // Put everything in a ___relocationState___ namespace to avoid possible
       // conflict with existing props.
       ___relocationState___: {
-        components: getMergedComponents(state, selectorProps),
+        components: getComponents(state, selectorProps),
         renderMap: components,
       },
     };
@@ -166,6 +122,7 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
       // possible conflict with existing props.
     ___relocationDispatch___: {
       removeComponent: (id) => dispatch(removeComponent(id)),
+      updateComponent: (id, props) => dispatch(updateComponent(id, props)),
     },
   });
 
