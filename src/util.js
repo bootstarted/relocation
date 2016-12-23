@@ -12,9 +12,10 @@ export const renderMapShape = PropTypes.objectOf(renderShape);
 export const componentShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
+  scope: PropTypes.string,
   props: PropTypes.object,
   remove: PropTypes.func,
-  removePath: PropTypes.string,
+  update: PropTypes.func,
   render: renderShape,
 });
 

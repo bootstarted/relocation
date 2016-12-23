@@ -1,20 +1,27 @@
 import {combineReducers} from 'redux';
 import {
-  REMOVE_COMPONENT,
   ADD_COMPONENT,
-  SET_PREVIOUS_PATH,
-  SET_ROUTE_COMPONENTS,
+  SET_COMPONENT,
+  UPDATE_COMPONENT,
+  REMOVE_COMPONENT,
 } from './action';
-
-const createReducer = (type, initial) =>
-  (state = initial, action) => action.type === type ? action.payload : state;
 
 export default combineReducers({
   components: (state = [], action) => ({
-    [ADD_COMPONENT]: (state, {payload}) => [...state, payload],
+    [ADD_COMPONENT]: (state, {payload}) =>
+      [...state, payload],
+
+    [SET_COMPONENT]: (state, {payload}) =>
+      [...state.filter((item) => item.id !== payload.id), payload],
+
+    [UPDATE_COMPONENT]: (state, {payload}) =>
+      state.map((item) => item.id === payload.id
+        ? {...item, props: {...item.props, ...payload.props}}
+        : item
+      ),
+
     [REMOVE_COMPONENT]: (state, {payload}) =>
-      state.filter((item) => item.id !== payload),
+      state.filter((item) => item.id !== payload.id),
+
   }[action.type] || (() => state))(state, action),
-  routeComponents: createReducer(SET_ROUTE_COMPONENTS, []),
-  previousPath: createReducer(SET_PREVIOUS_PATH, ''),
 });
