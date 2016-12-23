@@ -19,9 +19,9 @@ import {componentsShape, renderMapShape, getDisplayName} from './util';
 export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
   class Connect extends Component {
     static propTypes = {
-      ___relocationDispatch___: {
+      ___relocationDispatch___: PropTypes.shape({
         removeComponent: PropTypes.func.isRequired,
-      },
+      }),
       ___relocationState___: PropTypes.shape({
         components: componentsShape.isRequired,
         renderMap: renderMapShape.isRequired,
