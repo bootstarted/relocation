@@ -92,7 +92,7 @@ export default (formatPattern) => {
             ...typeof relocation === 'string' ? {type: relocation} : relocation,
 
             removePath: relocation.removePath !== undefined ?
-              relocation.removePath :
+              finalFormatPattern(relocation.removePath, params) :
               getFormattedPathName(i - 1),
           });
         }
