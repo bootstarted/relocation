@@ -12,17 +12,16 @@ import {componentsShape, renderMapShape, getDisplayName} from './util';
  *
  * @param {Object|Function} rawRenderMap An object with component type/render
  * function key value pairs or a function returning such an object.
- * @param {Object|Function} rawConfig An object or a function returing such an
+ * @param {Object} defaultProps An object or a function returing such an
  * object.
  * @returns {Function} Higher-order component wrapper.
  */
-export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
+export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
   class Connect extends Component {
     static propTypes = {
       dispatch: PropTypes.func.isRequired,
       ___relocation___: PropTypes.shape({
         components: componentsShape.isRequired,
-        config: PropTypes.object.isRequired,
         renderMap: renderMapShape.isRequired,
       }).isRequired,
     };
@@ -47,13 +46,15 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
     render() {
       const {components, renderMap} = this.props.___relocation___;
 
+      const inRenderMap = (component) =>
+        typeof renderMap[component.type] === 'function';
+
       const assignRender = (component) => ({
         ...component,
         render: renderMap[component.type],
       });
 
-      const inRenderMap = (component) =>
-        typeof renderMap[component.type] === 'function';
+      const assignScope = (component) => ({...component, scope});
 
       const assignRemoveHandler = (component) => {
         let removeHandler = null;
@@ -108,15 +109,21 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
         return component;
       };
 
+      const currentComponents = components
+        // Remove components not included in the render function map.
+        .filter(inRenderMap)
+        // Assign render functions.
+        .map(assignRender)
+        // Assign scope, if configured.
+        .map(scope ? assignScope : (component) => component)
+        // Assign remove handler functions.
+        .map(assignRemoveHandler);
+
       const mergedProps = {
         ...this.props,
-        components: components
-          // Assign render functions.
-          .map(assignRender)
-          // Remove components not included in the render function map.
-          .filter(inRenderMap)
-          // Assign remove handler functions.
-          .map(assignRemoveHandler),
+        ...scope
+          ? {[scope]: {components: currentComponents}}
+          : {components: currentComponents},
       };
 
       return <WrappedComponent {...mergedProps}/>;
@@ -126,24 +133,23 @@ export default (rawRenderMap, rawConfig = {}) => (WrappedComponent) => {
   Connect.displayName = `Relocation(${getDisplayName(WrappedComponent)})`;
 
   const mapState = (state, props) => {
-    const config = typeof rawConfig === 'function' ?
-      rawConfig(props) : rawConfig;
+    const mergedProps = {
+      ...defaultProps,
+      ...scope ? props[scope] : props,
+    };
 
-    const renderMap = typeof rawRenderMap === 'function' ?
-      rawRenderMap(props) : rawRenderMap;
+    const {components, getRelocationState} = mergedProps;
 
-    const {getRelocationState} = config;
-
-    const selectorProps = getRelocationState ?
-      {getRelocationState, ...props} : props;
+    const selectorProps = getRelocationState
+      ? {getRelocationState, ...props}
+      : props;
 
     return {
       // Put everything in a ___relocation___ namespace to avoid possible
       // conflict with existing props.
       ___relocation___: {
         components: getMergedComponents(state, selectorProps),
-        config,
-        renderMap,
+        renderMap: components,
       },
     };
   };
