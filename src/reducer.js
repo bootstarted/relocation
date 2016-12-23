@@ -4,7 +4,6 @@ import {
   SET_COMPONENT,
   UPDATE_COMPONENT,
   REMOVE_COMPONENT,
-  SET_ROUTE_COMPONENTS,
 } from './action';
 
 export default combineReducers({
@@ -25,9 +24,4 @@ export default combineReducers({
       state.filter((item) => item.id !== payload.id),
 
   }[action.type] || (() => state))(state, action),
-
-  routeComponents: (state = [], action) =>
-    action.type === SET_ROUTE_COMPONENTS
-      ? action.payload
-      : state,
 });

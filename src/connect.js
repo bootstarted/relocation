@@ -32,15 +32,6 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
       router: PropTypes.object,
     }
 
-    navigateToPath(path) {
-      // Check for the react-router context.
-      if (!this.context.router) {
-        return;
-      }
-
-      this.context.router.push(path);
-    }
-
     render() {
       const {components, renderMap} = this.props.___relocationState___;
       const {
@@ -56,9 +47,7 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
           ...component,
           render: renderMap[component.type],
           update: (props) => updateComponent(component.id, props),
-          remove: typeof component.removePath === 'string'
-            ? () => this.navigateToPath(component.removePath)
-            : () => removeComponent(component.id),
+          remove: () => removeComponent(component.id),
         };
 
         if (scope) {

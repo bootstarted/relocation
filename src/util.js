@@ -15,7 +15,7 @@ export const componentShape = PropTypes.shape({
   scope: PropTypes.string,
   props: PropTypes.object,
   remove: PropTypes.func,
-  removePath: PropTypes.string,
+  update: PropTypes.func,
   render: renderShape,
 });
 
