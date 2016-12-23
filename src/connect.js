@@ -19,8 +19,10 @@ import {componentsShape, renderMapShape, getDisplayName} from './util';
 export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
   class Connect extends Component {
     static propTypes = {
-      dispatch: PropTypes.func.isRequired,
-      ___relocation___: PropTypes.shape({
+      ___relocationDispatch___: {
+        removeComponent: PropTypes.func.isRequired,
+      },
+      ___relocationState___: PropTypes.shape({
         components: componentsShape.isRequired,
         renderMap: renderMapShape.isRequired,
       }).isRequired,
@@ -39,12 +41,9 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
       this.context.router.push(path);
     }
 
-    removeComponent(id) {
-      return this.props.dispatch(removeComponent(id));
-    }
-
     render() {
-      const {components, renderMap} = this.props.___relocation___;
+      const {components, renderMap} = this.props.___relocationState___;
+      const {removeComponent} = this.props.___relocationDispatch___;
 
       const inRenderMap = (component) =>
         typeof renderMap[component.type] === 'function';
@@ -67,7 +66,7 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
           // The component object does not have a `remove` property, or it has
           // a truthy value that is not a function. Either case indicates that
           // it should use the default remove handler.
-          removeHandler = () => this.removeComponent(component.id);
+          removeHandler = () => removeComponent(component.id);
         }
 
         let pathRemoveHandler = null;
@@ -119,8 +118,16 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
         // Assign remove handler functions.
         .map(assignRemoveHandler);
 
+      /* eslint-disable no-unused-vars */
+      const {
+        ___relocationState___,
+        ___relocationDispatch___,
+        ...childProps,
+      } = this.props;
+      /* eslint-enable no-unused-vars */
+
       const mergedProps = {
-        ...this.props,
+        ...childProps,
         ...scope
           ? {[scope]: {components: currentComponents}}
           : {components: currentComponents},
@@ -145,14 +152,25 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
       : props;
 
     return {
-      // Put everything in a ___relocation___ namespace to avoid possible
+      // Put everything in a ___relocationState___ namespace to avoid possible
       // conflict with existing props.
-      ___relocation___: {
+      ___relocationState___: {
         components: getMergedComponents(state, selectorProps),
         renderMap: components,
       },
     };
   };
 
-  return connect(mapState)(hoistStatics(Connect, WrappedComponent));
+  const mapDispatch = (dispatch) => ({
+      // Put everything in a ___relocationDispatch___ namespace to avoid
+      // possible conflict with existing props.
+    ___relocationDispatch___: {
+      removeComponent: (id) => dispatch(removeComponent(id)),
+    },
+  });
+
+  return connect(
+    mapState,
+    mapDispatch,
+  )(hoistStatics(Connect, WrappedComponent));
 };
