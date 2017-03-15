@@ -1,9 +1,10 @@
 {
   "presets": [
-    "metalab", {
+    ["metalab", {
       "targets": {
+        "node": 4,
         "browsers": [">1%"]
       }
-    }
+    }]
   ]
 }
