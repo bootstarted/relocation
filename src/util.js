@@ -7,7 +7,10 @@ export const renderShape = PropTypes.oneOfType([
   PropTypes.string,
 ]);
 
-export const renderMapShape = PropTypes.objectOf(renderShape);
+export const renderMapShape = PropTypes.oneOfType([
+  PropTypes.func,
+  PropTypes.objectOf(renderShape),
+]);
 
 export const componentShape = PropTypes.shape({
   id: PropTypes.string.isRequired,

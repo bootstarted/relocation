@@ -33,11 +33,17 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
     }
 
     render() {
-      const {components, renderMap} = this.props.___relocationState___;
+      const {
+        components,
+        renderMap: rawRenderMap,
+      } = this.props.___relocationState___;
       const {
         removeComponent,
         updateComponent,
       } = this.props.___relocationDispatch___;
+
+      const renderMap = typeof rawRenderMap === 'function' ?
+        rawRenderMap(this.props) : rawRenderMap;
 
       const inRenderMap = (component) =>
         typeof renderMap[component.type] === 'function';
