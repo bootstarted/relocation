@@ -1,6 +1,7 @@
 import {Component, createElement, PropTypes} from 'react';
 import hoistStatics from 'hoist-non-react-statics';
 import {connect} from 'react-redux';
+import {createStructuredSelector} from 'reselect';
 
 import {getComponents} from './selector';
 import {removeComponent, updateComponent} from './action';
@@ -33,18 +34,26 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
     }
 
     render() {
-      const {components, renderMap} = this.props.___relocationState___;
+      const {
+        ___relocationState___,
+        ___relocationDispatch___,
+        ...childProps,
+      } = this.props;
+
+      const {enabled, components, renderMap} = ___relocationState___;
       const {
         removeComponent,
         updateComponent,
-      } = this.props.___relocationDispatch___;
+      } = ___relocationDispatch___;
 
       const inRenderMap = (component) =>
-        typeof renderMap[component.type] === 'function';
+        typeof renderMap[component.type] === 'function' &&
+        (typeof enabled[component.type] === 'undefined' || enabled[component.type]);
 
       const assign = (component) => {
         const result = {
           ...component,
+          sink: {...defaultProps, ...childProps},
           render: renderMap[component.type],
           update: (props) => updateComponent(component.id, props),
           remove: () => removeComponent(component.id),
@@ -63,14 +72,6 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
         // Assign render update and remove functions and scope if it is defined.
         .map(assign);
 
-      /* eslint-disable no-unused-vars */
-      const {
-        ___relocationState___,
-        ___relocationDispatch___,
-        ...childProps,
-      } = this.props;
-      /* eslint-enable no-unused-vars */
-
       const mergedProps = {
         ...childProps,
         ...scope
@@ -85,24 +86,34 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
   Connect.displayName = `Relocation(${getDisplayName(WrappedComponent)})`;
 
   const mapState = (state, props) => {
-    const mergedProps = {
-      ...defaultProps,
-      ...scope ? props[scope] : props,
-    };
+    const _enabled = {};
+    for (const key in props.components) {
+      if (props.components[key].enabled) {
+        _enabled[key] = props.components[key].enabled;
+      }
+    }
+    const enabled = createStructuredSelector(_enabled);
+    return (state, props) => {
+      const mergedProps = {
+        ...defaultProps,
+        ...scope ? props[scope] : props,
+      };
 
-    const {components, getRelocationState} = mergedProps;
+      const {components, getRelocationState} = mergedProps;
 
-    const selectorProps = getRelocationState
-      ? {getRelocationState, ...props}
-      : props;
+      const selectorProps = getRelocationState
+        ? {getRelocationState, ...props}
+        : props;
 
-    return {
-      // Put everything in a ___relocationState___ namespace to avoid possible
-      // conflict with existing props.
-      ___relocationState___: {
-        components: getComponents(state, selectorProps),
-        renderMap: components,
-      },
+      return {
+        // Put everything in a ___relocationState___ namespace to avoid possible
+        // conflict with existing props.
+        ___relocationState___: {
+          components: getComponents(state, selectorProps),
+          renderMap: components,
+          enabled: enabled(state, mergedProps),
+        },
+      };
     };
   };
 
