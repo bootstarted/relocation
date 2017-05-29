@@ -12,7 +12,7 @@ const getFinalComponents = (state, props) => {
   const exists = (component) => {
     return props.components[component.type] === 'function';
   };
-  const shouldMount = props.componentShouldMount || () => true;
+  const shouldMount = props.componentShouldMount || (() => true);
   return initial.filter(
     (component) => exists(component) && shouldMount(state, props, component)
   );
