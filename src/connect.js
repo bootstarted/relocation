@@ -1,7 +1,6 @@
 import {Component, createElement, PropTypes} from 'react';
 import hoistStatics from 'hoist-non-react-statics';
 import {connect} from 'react-redux';
-import {createStructuredSelector} from 'reselect';
 
 import {getComponents} from './selector';
 import {removeComponent, updateComponent} from './action';
@@ -10,7 +9,7 @@ import {componentsShape, renderMapShape, getDisplayName} from './util';
 const getFinalComponents = (state, props) => {
   const initial = getComponents(state, props);
   const exists = (component) => {
-    return props.components[component.type] === 'function';
+    return typeof props.components[component.type] === 'function';
   };
   const shouldMount = props.componentShouldMount || (() => true);
   return initial.filter(
@@ -57,10 +56,10 @@ export default () => (WrappedComponent) => {
       const assign = (component) => {
         const result = {
           ...component,
-          sink: {...defaultProps, ...childProps},
+          containerProps: childProps,
           render: components[component.type],
           update: (...args) => updateComponent(component.id, ...args),
-          remove: () => removeComponent(component.id),
+          remove: (...args) => removeComponent(component.id, ...args),
         };
 
         return result;
