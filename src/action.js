@@ -4,7 +4,6 @@ export const ADD_COMPONENT = '@@relocation/ADD_COMPONENT';
 export const SET_COMPONENT = '@@relocation/SET_COMPONENT';
 export const UPDATE_COMPONENT = '@@relocation/UPDATE_COMPONENT';
 export const REMOVE_COMPONENT = '@@relocation/REMOVE_COMPONENT';
-export const SET_ROUTE_COMPONENTS = '@@relocation/SET_ROUTE_COMPONENTS';
 
 export const addComponent = (type, props) => ({
   type: ADD_COMPONENT,
@@ -24,9 +23,4 @@ export const updateComponent = (id, props) => ({
 export const removeComponent = (id) => ({
   type: REMOVE_COMPONENT,
   payload: {id},
-});
-
-export const setRouteComponents = (components) => ({
-  type: SET_ROUTE_COMPONENTS,
-  payload: components,
 });
