@@ -7,6 +7,17 @@ import {getComponents} from './selector';
 import {removeComponent, updateComponent} from './action';
 import {componentsShape, renderMapShape, getDisplayName} from './util';
 
+const getFinalComponents = (state, props) => {
+  const initial = getComponents(state, props);
+  const exists = (component) => {
+    return props.components[component.type] === 'function';
+  };
+  const shouldMount = props.componentShouldMount || () => true;
+  return initial.filter(
+    (component) => exists(component) && shouldMount(state, props, component)
+  );
+};
+
 /**
  * Create a higher-order wrapper which provides an array of components to render
  * to its wrapped instance.
@@ -17,21 +28,18 @@ import {componentsShape, renderMapShape, getDisplayName} from './util';
  * object.
  * @returns {Function} Higher-order component wrapper.
  */
-export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
+export default () => (WrappedComponent) => {
   class Connect extends Component {
     static propTypes = {
       ___relocationDispatch___: PropTypes.shape({
         removeComponent: PropTypes.func.isRequired,
+        updateComponent: PropTypes.func.isRequired,
       }),
       ___relocationState___: PropTypes.shape({
-        components: componentsShape.isRequired,
-        renderMap: renderMapShape.isRequired,
+        components: renderMapShape.isRequired,
+        instances: componentsShape.isRequired,
       }).isRequired,
     };
-
-    static contextTypes = {
-      router: PropTypes.object,
-    }
 
     render() {
       const {
@@ -40,43 +48,29 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
         ...childProps,
       } = this.props;
 
-      const {enabled, components, renderMap} = ___relocationState___;
+      const {components, instances} = ___relocationState___;
       const {
         removeComponent,
         updateComponent,
       } = ___relocationDispatch___;
 
-      const inRenderMap = (component) =>
-        typeof renderMap[component.type] === 'function' &&
-        (typeof enabled[component.type] === 'undefined' || enabled[component.type]);
-
       const assign = (component) => {
         const result = {
           ...component,
           sink: {...defaultProps, ...childProps},
-          render: renderMap[component.type],
-          update: (props) => updateComponent(component.id, props),
+          render: components[component.type],
+          update: (...args) => updateComponent(component.id, ...args),
           remove: () => removeComponent(component.id),
         };
-
-        if (scope) {
-          result.scope = scope;
-        }
 
         return result;
       };
 
-      const currentComponents = components
-        // Remove components not included in the render function map.
-        .filter(inRenderMap)
-        // Assign render update and remove functions and scope if it is defined.
-        .map(assign);
+      const currentComponents = instances.map(assign);
 
       const mergedProps = {
         ...childProps,
-        ...scope
-          ? {[scope]: {components: currentComponents}}
-          : {components: currentComponents},
+        components: currentComponents,
       };
 
       return <WrappedComponent {...mergedProps}/>;
@@ -86,34 +80,13 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
   Connect.displayName = `Relocation(${getDisplayName(WrappedComponent)})`;
 
   const mapState = (state, props) => {
-    const _enabled = {};
-    for (const key in props.components) {
-      if (props.components[key].enabled) {
-        _enabled[key] = props.components[key].enabled;
-      }
-    }
-    const enabled = createStructuredSelector(_enabled);
-    return (state, props) => {
-      const mergedProps = {
-        ...defaultProps,
-        ...scope ? props[scope] : props,
-      };
-
-      const {components, getRelocationState} = mergedProps;
-
-      const selectorProps = getRelocationState
-        ? {getRelocationState, ...props}
-        : props;
-
-      return {
-        // Put everything in a ___relocationState___ namespace to avoid possible
-        // conflict with existing props.
-        ___relocationState___: {
-          components: getComponents(state, selectorProps),
-          renderMap: components,
-          enabled: enabled(state, mergedProps),
-        },
-      };
+    return {
+      // Put everything in a ___relocationState___ namespace to avoid possible
+      // conflict with existing props.
+      ___relocationState___: {
+        instances: getFinalComponents(state, props),
+        components: props.components,
+      },
     };
   };
 
