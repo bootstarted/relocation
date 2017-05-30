@@ -28,7 +28,7 @@
   "devDependencies": {
     "adana-cli": "^0.1.2",
     "adana-dump": "^0.1.0",
-    "adana-format-istanbul": "^0.1.0",
+    "adana-format-istanbul": "^0.1.1",
     "babel-cli": "^6.14.0",
     "babel-preset-metalab": "^1.0.0",
     "enzyme": "^2.8.2",
