@@ -2,21 +2,21 @@ import {PropTypes} from 'react';
 
 export const getDisplayName = (C) => C.displayName || C.name || 'Component';
 
-export const renderShape = PropTypes.oneOfType([
+export const componentShape = PropTypes.oneOfType([
   PropTypes.func,
   PropTypes.string,
 ]);
 
-export const renderMapShape = PropTypes.objectOf(renderShape);
+export const componentsShape = PropTypes.objectOf(componentShape);
 
-export const componentShape = PropTypes.shape({
+export const instanceShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
   scope: PropTypes.string,
   props: PropTypes.object,
   remove: PropTypes.func,
   update: PropTypes.func,
-  render: renderShape,
+  render: componentShape,
 });
 
-export const componentsShape = PropTypes.arrayOf(componentShape);
+export const instancesShape = PropTypes.arrayOf(instanceShape);
