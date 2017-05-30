@@ -67,7 +67,7 @@ export default ({scope, ...defaultProps} = {}) => (WrappedComponent) => {
       const {
         ___relocationState___,
         ___relocationDispatch___,
-        ...childProps,
+        ...childProps
       } = this.props;
       /* eslint-enable no-unused-vars */
 
