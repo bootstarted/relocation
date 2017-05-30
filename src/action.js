@@ -5,19 +5,19 @@ export const SET_COMPONENT = '@@relocation/SET_COMPONENT';
 export const UPDATE_COMPONENT = '@@relocation/UPDATE_COMPONENT';
 export const REMOVE_COMPONENT = '@@relocation/REMOVE_COMPONENT';
 
-export const addComponent = (type, props) => ({
+export const addComponent = (type, props, meta) => ({
   type: ADD_COMPONENT,
-  payload: {id: cuid(), type, props},
+  payload: {id: cuid(), type, props, meta},
 });
 
-export const setComponent = (type, id = type, props) => ({
+export const setComponent = (type, id = type, props, meta) => ({
   type: SET_COMPONENT,
-  payload: {id, type, props},
+  payload: {id, type, props, meta},
 });
 
-export const updateComponent = (id, props) => ({
+export const updateComponent = (id, props, meta) => ({
   type: UPDATE_COMPONENT,
-  payload: {id, props},
+  payload: {id, props, meta},
 });
 
 export const removeComponent = (id) => ({
