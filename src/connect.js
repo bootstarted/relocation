@@ -44,7 +44,7 @@ export default () => (WrappedComponent) => {
       const {
         ___relocationState___,
         ___relocationDispatch___,
-        ...childProps,
+        ...childProps
       } = this.props;
 
       const {components, instances} = ___relocationState___;
