@@ -1,11 +1,10 @@
 import {Component, createElement} from 'react';
-import PropTypes from 'prop-types';
 import hoistStatics from 'hoist-non-react-statics';
 import {connect} from 'react-redux';
 
 import {getComponents} from './selector';
 import {removeComponent, updateComponent} from './action';
-import {componentsShape, instancesShape, getDisplayName} from './util';
+import {getDisplayName} from './util';
 
 const getFinalComponents = (state, props) => {
   const initial = getComponents(state, props);
@@ -30,17 +29,6 @@ const getFinalComponents = (state, props) => {
  */
 export default () => (WrappedComponent) => {
   class Connect extends Component {
-    static propTypes = {
-      ___relocationDispatch___: PropTypes.shape({
-        removeComponent: PropTypes.func.isRequired,
-        updateComponent: PropTypes.func.isRequired,
-      }),
-      ___relocationState___: PropTypes.shape({
-        components: componentsShape.isRequired,
-        instances: instancesShape.isRequired,
-      }).isRequired,
-    };
-
     render() {
       const {
         ___relocationState___,
