@@ -1,6 +1,6 @@
 {
   "name": "relocation",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Relocation works with React Redux to manage modals, lightboxes, alerts, and overlays.",
   "main": "index.js",
   "scripts": {
