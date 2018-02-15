@@ -21,13 +21,10 @@ const getFinalComponents = (state, props) => {
  * Create a higher-order wrapper which provides an array of components to render
  * to its wrapped instance.
  *
- * @param {Object|Function} rawRenderMap An object with component type/render
- * function key value pairs or a function returning such an object.
- * @param {Object} defaultProps An object or a function returing such an
- * object.
- * @returns {Function} Higher-order component wrapper.
+ * @param {Function} WrappedComponent A react component.
+ * @returns {Function} A connected react component.
  */
-export default () => (WrappedComponent) => {
+export default (WrappedComponent) => {
   class Connect extends Component {
     render() {
       const {

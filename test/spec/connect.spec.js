@@ -16,7 +16,7 @@ const createStore = () => baseCreateStore(combineReducers({relocation}));
 describe('connect', () => {
   it('should render a single component', () => {
     const store = createStore();
-    const Component = connect()(Base);
+    const Component = connect(Base);
     store.dispatch(setComponent('TEST', 'banana', {foo: 5}));
     const result = render(
       <Component
