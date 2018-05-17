@@ -1,6 +1,5 @@
 node_modules
 *.log
-*.js
-*.js.map
-!src/**/*.js
-coverage
+/*.js
+/*.js.map
+/coverage

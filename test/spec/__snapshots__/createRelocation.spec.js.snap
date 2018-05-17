@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createRelocation should handle component prop updates 1`] = `
+<div>
+  spagoots
+</div>
+`;
+
+exports[`createRelocation should portal elements in and out of the tree 1`] = `null`;
+
+exports[`createRelocation should portal elements in and out of the tree 2`] = `
+<div>
+  Hello
+</div>
+`;
+
+exports[`createRelocation should work with collector 1`] = `
+<div>
+  Hello
+</div>
+`;
